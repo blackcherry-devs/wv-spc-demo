@@ -1,0 +1,121 @@
+{
+  "Lavadora central": [
+    {
+      "day": "01-may-26",
+      "conc": 5.3,
+      "conc2": 5.34,
+      "ph": 9.43
+    },
+    {
+      "day": "02-may-26",
+      "conc": 5.34,
+      "conc2": null,
+      "ph": 9.42
+    },
+    {
+      "day": "03-may-26",
+      "conc": 5.94,
+      "conc2": 5.62,
+      "ph": 9.47
+    },
+    {
+      "day": "04-may-26",
+      "conc": 5.62,
+      "conc2": null,
+      "ph": 9.45
+    },
+    {
+      "day": "05-may-26",
+      "conc": 5.62,
+      "conc2": 5.74,
+      "ph": 9.43
+    },
+    {
+      "day": "06-may-26",
+      "conc": 5.74,
+      "conc2": null,
+      "ph": 9.45
+    },
+    {
+      "day": "07-may-26",
+      "conc": 5.78,
+      "conc2": null,
+      "ph": 9.42
+    },
+    {
+      "day": "08-may-26",
+      "conc": 6.03,
+      "conc2": 5.94,
+      "ph": 9.42
+    },
+    {
+      "day": "09-may-26",
+      "conc": 5.9,
+      "conc2": 5.85,
+      "ph": 9.42
+    },
+    {
+      "day": "10-may-26",
+      "conc": 5.85,
+      "conc2": 5.22,
+      "ph": 9.44
+    },
+    {
+      "day": "11-may-26",
+      "conc": 5.22,
+      "conc2": 5.06,
+      "ph": 9.43
+    },
+    {
+      "day": "12-may-26",
+      "conc": 5.22,
+      "conc2": 5.14,
+      "ph": 9.43
+    },
+    {
+      "day": "13-may-26",
+      "conc": 5.22,
+      "conc2": 5.06,
+      "ph": 9.45
+    },
+    {
+      "day": "14-may-26",
+      "conc": 5.18,
+      "conc2": null,
+      "ph": 9.45
+    }
+  ],
+  "lavadora central": [
+    {
+      "day": "20-may-26",
+      "conc": 5.3,
+      "conc2": 5.62,
+      "ph": 9.43,
+      "limits": {
+        "ph": {
+          "min": 9,
+          "max": 10,
+          "intMin": 9.1,
+          "intMax": 9.9,
+          "tickStep": 0.2
+        },
+        "conc": {
+          "min": 2,
+          "max": 6,
+          "intMin": 3.5,
+          "intMax": 5.4,
+          "tickStep": 0.1
+        }
+      },
+      "timestamp": "2026-05-20T07:09:19.772Z",
+      "cond2": null,
+      "matAdd": null,
+      "waterAdd": null,
+      "capacity": null,
+      "repo": null,
+      "level": 100,
+      "estatusFinal": "OK",
+      "comentarios": ""
+    }
+  ]
+}
