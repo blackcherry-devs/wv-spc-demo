@@ -16,14 +16,53 @@ const mockMachineData = {
   concData: [5.1, 5.3, 5.2, 5.5, 5.4]
 };
 
-app.get('/api/operacion/:id', (req, res) => {
+const fs = require('fs');
+const path = require('path');
+
+const RECORDS_FILE = path.join(__dirname, 'data', 'records.json');
+
+app.get('/api/records/:id', (req, res) => {
   const { id } = req.params;
-  
-  if (id === "LAV01") {
-    return res.json(mockMachineData);
+  try {
+    if (!fs.existsSync(RECORDS_FILE)) {
+      return res.json([]);
+    }
+    const data = JSON.parse(fs.readFileSync(RECORDS_FILE, 'utf8'));
+    return res.json(data[id] || []);
+  } catch (error) {
+    console.error("Error reading records:", error);
+    res.status(500).json({ error: "Internal server error" });
   }
+});
+
+app.post('/api/records/:id', (req, res) => {
+  const { id } = req.params;
+  const newRecord = req.body;
   
-  return res.status(404).json({ error: "Machine not found" });
+  try {
+    let data = {};
+    if (fs.existsSync(RECORDS_FILE)) {
+      data = JSON.parse(fs.readFileSync(RECORDS_FILE, 'utf8'));
+    }
+    
+    if (!data[id]) {
+      data[id] = [];
+    }
+    
+    // Append or replace if same day exists
+    const existingIndex = data[id].findIndex(r => r.day === newRecord.day);
+    if (existingIndex >= 0) {
+      data[id][existingIndex] = { ...data[id][existingIndex], ...newRecord };
+    } else {
+      data[id].push(newRecord);
+    }
+    
+    fs.writeFileSync(RECORDS_FILE, JSON.stringify(data, null, 2));
+    res.json({ success: true, record: newRecord });
+  } catch (error) {
+    console.error("Error saving record:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
 });
 
 app.listen(PORT, () => {

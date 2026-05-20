@@ -2,7 +2,7 @@ import React, { useContext } from 'react';
 import ProcessCards from '../components/ProcessCards';
 import OperationsGrid from '../components/OperationsGrid';
 import ChartDetail from '../components/ChartDetail';
-import WaterTank from '../components/WaterTank';
+import DataEntry from './DataEntry';
 import { AuthContext } from '../context/AuthContext';
 import { Routes, Route, useNavigate, useLocation, useParams } from 'react-router-dom';
 
@@ -49,16 +49,8 @@ const MetricsWrapper = () => {
         </div>
       </header>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2">
-          <ChartDetail processName={decodedOperation} />
-        </div>
-        <div className="space-y-6">
-          <div className="bg-white p-6 rounded-xl shadow-lg border border-gray-100 flex flex-col items-center justify-center h-full min-h-[400px]">
-            <h3 className="text-lg font-bold text-vw-blue mb-8 w-full text-center border-b pb-2">Nivel de Tanque</h3>
-            <WaterTank level={70} />
-          </div>
-        </div>
+      <div className="w-full">
+        <ChartDetail processName={decodedOperation} operationId={operationId} />
       </div>
     </div>
   );
@@ -108,10 +100,25 @@ const AdminDashboard = () => {
             Selección de Proceso
           </button>
           
-          <div className={`w-full flex items-center px-4 py-3 mx-2 transition-all font-label-md text-label-md ${isOperationOrMetricsView ? 'bg-secondary-container text-on-secondary-container rounded-full font-bold shadow-sm' : 'text-outline/50 cursor-not-allowed'}`}>
+          <div className={`w-full flex items-center px-4 py-3 mx-2 transition-all font-label-md text-label-md ${isOperationOrMetricsView && !location.pathname.includes('/llenado') ? 'bg-secondary-container text-on-secondary-container rounded-full font-bold shadow-sm' : 'text-outline/50'}`}>
             <span className="material-symbols-outlined mr-3">settings_heart</span>
             Selección de Operación
           </div>
+          
+          {isOperationOrMetricsView && (
+            <button 
+              onClick={() => {
+                const parts = location.pathname.split('/');
+                if (parts.length >= 5) {
+                  navigate(`/proceso/${parts[2]}/operacion/${parts[4]}/llenado`);
+                }
+              }}
+              className={`w-full flex items-center px-4 py-3 mx-2 transition-all font-label-md text-label-md ${location.pathname.includes('/llenado') ? 'bg-secondary-container text-on-secondary-container rounded-full font-bold shadow-sm' : 'text-on-surface-variant hover:text-secondary hover:bg-surface-container-high rounded-full'}`}
+            >
+              <span className="material-symbols-outlined mr-3">edit_document</span>
+              Llenado de Información
+            </button>
+          )}
         </nav>
         <div className="mt-auto border-t border-outline/10 pt-md space-y-sm">
           <button 
@@ -130,6 +137,7 @@ const AdminDashboard = () => {
           <Route path="/" element={<ProcessCardsWrapper />} />
           <Route path="/proceso/:processId" element={<OperationsGridWrapper />} />
           <Route path="/proceso/:processId/operacion/:operationId" element={<MetricsWrapper />} />
+          <Route path="/proceso/:processId/operacion/:operationId/llenado" element={<DataEntry />} />
         </Routes>
       </main>
       
