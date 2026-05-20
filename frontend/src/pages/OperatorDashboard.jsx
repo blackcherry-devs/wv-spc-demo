@@ -4,6 +4,7 @@ import ProcessCards from '../components/ProcessCards';
 import OperationsGrid from '../components/OperationsGrid';
 import ChartDetail from '../components/ChartDetail';
 import OperationOverview from '../components/OperationOverview';
+import DataEntry from './DataEntry';
 import { AuthContext } from '../context/AuthContext';
 import { Routes, Route, useNavigate, useLocation, useParams } from 'react-router-dom';
 
@@ -23,7 +24,7 @@ const OperationsGridWrapper = () => {
 };
 
 const MetricsWrapper = () => {
-  const { processId, operationId } = useParams();
+  const { processId, operationId, metricId } = useParams();
   const navigate = useNavigate();
   const decodedProcess = decodeURIComponent(processId);
   const decodedOperation = decodeURIComponent(operationId);
@@ -51,7 +52,7 @@ const MetricsWrapper = () => {
       </header>
 
       <div className="w-full">
-        <ChartDetail processName={decodedOperation} />
+        <ChartDetail processName={decodedOperation} processId={processId} operationId={operationId} metricId={metricId} />
       </div>
     </div>
   );
@@ -159,12 +160,30 @@ const OperatorDashboard = () => {
               <span className="nav-text whitespace-nowrap">Selección de Operación</span>
             </div>
             {activeOperation && (
-              <div className="flex ml-8 mt-2 mb-2 nav-text whitespace-nowrap">
+              <div 
+                className="flex ml-8 mt-2 mb-2 nav-text whitespace-nowrap cursor-pointer hover:opacity-80"
+                onClick={() => navigate(`/operator/proceso/${encodeURIComponent(activeProcess)}/operacion/${encodeURIComponent(activeOperation)}`)}
+              >
                 <div className="w-[2px] h-6 bg-outline/20 mr-4 rounded-full"></div>
-                <span className="font-bold text-sm text-[#002733] flex items-center capitalize">{activeOperation}</span>
+                <span className="font-bold text-sm text-[#002733] flex items-center capitalize hover:text-secondary transition-colors">{activeOperation}</span>
               </div>
             )}
           </div>
+          
+          { (isOperationView || isOverview) && (
+            <button 
+              onClick={() => {
+                const parts = location.pathname.split('/');
+                if (parts.length >= 6) {
+                  navigate(`/operator/proceso/${parts[3]}/operacion/${parts[5]}/llenado`);
+                }
+              }}
+              className={`w-full flex items-center px-4 py-3 transition-all font-label-md text-label-md rounded-lg ${location.pathname.includes('/llenado') ? 'bg-[#A3E4F9] text-[#002733] font-bold shadow-sm' : 'text-on-surface-variant hover:text-secondary hover:bg-surface-container-high'}`}
+            >
+              <span className="material-symbols-outlined mr-3 shrink-0">edit_document</span>
+              <span className="nav-text whitespace-nowrap">Llenado de Información</span>
+            </button>
+          )}
         </nav>
 
         <div className="mt-auto border-t border-outline/10 pt-md space-y-sm relative">
@@ -193,6 +212,7 @@ const OperatorDashboard = () => {
           <Route path="/proceso/:processId" element={<OperationsGridWrapper />} />
           <Route path="/proceso/:processId/operacion/:operationId" element={<OperationOverview isOperator />} />
           <Route path="/proceso/:processId/operacion/:operationId/metrica/:metricId" element={<MetricsWrapper />} />
+          <Route path="/proceso/:processId/operacion/:operationId/llenado" element={<DataEntry />} />
         </Routes>
       </main>
       

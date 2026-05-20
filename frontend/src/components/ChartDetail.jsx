@@ -253,7 +253,9 @@ const ChartDetail = ({
   date = 'mayo 2026',
   chartDataRaw: initialData = defaultRawData,
   limits: initialLimits = defaultLimits,
-  operationId
+  operationId,
+  processId,
+  metricId
 }) => {
   const [chartDataRaw, setChartDataRaw] = React.useState(initialData);
   const [limits, setLimits] = React.useState(initialLimits);
@@ -264,21 +266,35 @@ const ChartDetail = ({
   const [targetDate, setTargetDate] = React.useState(new Date());
 
   React.useEffect(() => {
-    if (operationId) {
-      fetch(`http://localhost:5001/api/records/${encodeURIComponent(operationId)}`)
+    if (operationId && processId) {
+      fetch(`http://localhost:3001/api/operations/${encodeURIComponent(processId)}/${encodeURIComponent(operationId)}`)
         .then(res => res.json())
         .then(data => {
-          if (Array.isArray(data) && data.length > 0) {
-            setChartDataRaw(data);
-            const lastRecord = data[data.length - 1];
-            if (lastRecord && lastRecord.limits) {
-              setLimits(lastRecord.limits);
+          if (data && data.laboratorio) {
+            const combined = data.laboratorio.find(m => m.metricId === 'conc-ph');
+            if (combined && combined.data) {
+              const flatData = combined.data.map((item) => ({
+                day: item.date.length === 6 ? item.date + '-26' : item.date, // e.g. "01-may" -> "01-may-26"
+                conc: item.conc,
+                ph: item.ph
+              }));
+              
+              const storageKey = `spc_records_${processId}_${operationId}`;
+              const sessionRecords = JSON.parse(sessionStorage.getItem(storageKey) || '[]');
+              
+              sessionRecords.forEach(rec => {
+                 const existingIdx = flatData.findIndex(d => d.day === rec.day);
+                 if (existingIdx !== -1) flatData[existingIdx] = { ...flatData[existingIdx], ...rec };
+                 else flatData.push({ day: rec.day, conc: rec.conc, ph: rec.ph });
+              });
+
+              setChartDataRaw(flatData);
             }
           }
         })
         .catch(err => console.error("Error fetching data:", err));
     }
-  }, [operationId]);
+  }, [operationId, processId]);
 
   const chartData = React.useMemo(() => {
     const monthNames = ["ene", "feb", "mar", "abr", "may", "jun", "jul", "ago", "sep", "oct", "nov", "dic"];

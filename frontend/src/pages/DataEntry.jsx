@@ -68,17 +68,21 @@ const DataEntry = () => {
     };
 
     try {
-      const response = await fetch(`http://localhost:5001/api/records/${encodeURIComponent(operationId)}`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(record)
-      });
-      if (response.ok) {
-        navigate(`/proceso/${processId}/operacion/${operationId}`);
-      }
+      const isOperator = window.location.pathname.startsWith('/operator');
+      const storageKey = `spc_records_${processId}_${operationId}`;
+      const existing = JSON.parse(sessionStorage.getItem(storageKey) || '[]');
+      
+      // Update if exists, otherwise push
+      const existingIdx = existing.findIndex(r => r.day === record.day);
+      if (existingIdx !== -1) existing[existingIdx] = record;
+      else existing.push(record);
+      
+      sessionStorage.setItem(storageKey, JSON.stringify(existing));
+      
+      navigate(`${isOperator ? '/operator' : ''}/proceso/${processId}/operacion/${operationId}`);
     } catch (error) {
-      console.error("Error saving:", error);
-      alert("Error al guardar el registro");
+      console.error("Error saving to session storage:", error);
+      alert("Error al guardar el registro en memoria local");
     }
   };
 
