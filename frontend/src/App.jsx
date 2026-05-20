@@ -56,9 +56,9 @@ function App() {
           </ProtectedRoute>
         } />
 
-        <Route path="/operator" element={
+        <Route path="/operator/*" element={
           <ProtectedRoute allowedRoles={['OPERATOR']}>
-            <AppLayout>
+            <AppLayout noPadding>
               <OperatorDashboard />
             </AppLayout>
           </ProtectedRoute>

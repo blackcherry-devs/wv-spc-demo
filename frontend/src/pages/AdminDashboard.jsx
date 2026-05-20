@@ -1,8 +1,10 @@
-import React, { useContext } from 'react';
+import React, { useContext, useState, useRef, useEffect, useLayoutEffect } from 'react';
+import gsap from 'gsap';
 import ProcessCards from '../components/ProcessCards';
 import OperationsGrid from '../components/OperationsGrid';
 import ChartDetail from '../components/ChartDetail';
-import DataEntry from './DataEntry';
+import WaterTank from '../components/WaterTank';
+import OperationOverview from '../components/OperationOverview';
 import { AuthContext } from '../context/AuthContext';
 import { Routes, Route, useNavigate, useLocation, useParams } from 'react-router-dom';
 
@@ -40,17 +42,17 @@ const MetricsWrapper = () => {
             <p className="text-on-surface-variant font-body-lg text-body-lg mt-xs">Visualización de parámetros para la operación seleccionada.</p>
           </div>
           <button 
-            onClick={() => navigate(`/proceso/${processId}`)}
+            onClick={() => navigate(`/proceso/${processId}/operacion/${operationId}`)}
             className="flex items-center px-4 py-2 bg-surface-container-high hover:bg-surface-variant text-on-surface-variant rounded-lg transition-colors font-label-md text-label-md"
           >
             <span className="material-symbols-outlined mr-2">arrow_back</span>
-            Volver a Operaciones
+            Volver al Overview
           </button>
         </div>
       </header>
 
       <div className="w-full">
-        <ChartDetail processName={decodedOperation} operationId={operationId} />
+        <ChartDetail processName={decodedOperation} />
       </div>
     </div>
   );
@@ -74,35 +76,93 @@ const AdminDashboard = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
+  const [isMinimized, setIsMinimized] = useState(false);
+  const sidebarRef = useRef(null);
+
   const handleLogout = () => {
     logout();
     navigate('/login');
   };
 
-  const isProcessView = location.pathname === '/' || location.pathname === '';
-  const isOperationOrMetricsView = location.pathname.includes('/proceso/');
+  useEffect(() => {
+    const texts = sidebarRef.current.querySelectorAll('.nav-text');
+    if (isMinimized) {
+      gsap.to(texts, { opacity: 0, y: 10, duration: 0.2, stagger: 0.02, onComplete: () => {
+        texts.forEach(t => t.style.display = 'none');
+        gsap.to(sidebarRef.current, { width: 80, duration: 0.6, ease: 'back.out(1.2)' });
+      }});
+    } else {
+      gsap.to(sidebarRef.current, { width: 256, duration: 0.6, ease: 'back.out(1.2)', onComplete: () => {
+        texts.forEach(t => t.style.display = ''); // Restore display
+        gsap.fromTo(texts, { opacity: 0, y: -10 }, { opacity: 1, y: 0, duration: 0.2, stagger: 0.02 });
+      }});
+    }
+  }, [isMinimized]);
+
+  // Keep newly rendered texts hidden if the sidebar is already minimized
+  useLayoutEffect(() => {
+    if (isMinimized) {
+      const texts = sidebarRef.current.querySelectorAll('.nav-text');
+      gsap.set(texts, { opacity: 0, display: 'none' });
+    }
+  }, [location.pathname, isMinimized]);
+
+  const pathParts = location.pathname.split('/').filter(Boolean);
+  let activeProcess = null;
+  let activeOperation = null;
+
+  if (pathParts[0] === 'proceso') {
+    activeProcess = decodeURIComponent(pathParts[1] || '');
+  }
+  if (pathParts[2] === 'operacion') {
+    activeOperation = decodeURIComponent(pathParts[3] || '');
+  }
+
+  const isProcessView = location.pathname === '/';
+  const isOperationView = pathParts[0] === 'proceso' && !pathParts[2];
+  const isOverview = pathParts[2] === 'operacion';
 
   return (
     <div className="bg-background text-on-surface h-[calc(100vh-4rem)] flex font-sans w-full">
       
       {/* SideNavBar */}
-      <aside className="fixed left-0 top-16 h-[calc(100vh-4rem)] w-64 z-40 bg-surface border-r border-outline/20 shadow-lg flex flex-col py-lg pt-8">
+      <aside ref={sidebarRef} className="fixed left-0 top-16 h-[calc(100vh-4rem)] w-64 z-40 bg-surface border-r border-outline/20 shadow-lg flex flex-col py-lg pt-8">
+        
         <div className="px-6 mb-lg">
-          <h2 className="font-title-md text-title-md text-primary">Gestión de Calidad</h2>
-          <p className="font-label-md text-label-md text-on-surface-variant">Planta de Producción</p>
+          <h2 className="font-title-md text-title-md text-primary nav-text whitespace-nowrap">Gestión de Calidad</h2>
+          <p className="font-label-md text-label-md text-on-surface-variant nav-text whitespace-nowrap">Planta de Producción</p>
         </div>
-        <nav className="flex-1 space-y-sm mt-4">
-          <button 
-            onClick={() => navigate('/')}
-            className={`w-full flex items-center px-4 py-3 mx-2 transition-all font-label-md text-label-md ${isProcessView ? 'bg-secondary-container text-on-secondary-container rounded-full font-bold shadow-sm' : 'text-on-surface-variant hover:text-secondary hover:bg-surface-container-high rounded-full'}`}
-          >
-            <span className="material-symbols-outlined mr-3">factory</span>
-            Selección de Proceso
-          </button>
+        <nav className="flex-1 space-y-sm mt-4 px-2">
+          <div>
+            <button 
+              onClick={() => navigate('/')}
+              className={`w-full flex items-center px-4 py-3 transition-all font-label-md text-label-md rounded-lg ${isProcessView ? 'bg-[#A3E4F9] text-[#002733] font-bold shadow-sm' : 'text-on-surface-variant hover:text-secondary hover:bg-surface-container-high'}`}
+            >
+              <span className="material-symbols-outlined mr-3 shrink-0">factory</span>
+              <span className="nav-text whitespace-nowrap">Selección de Proceso</span>
+            </button>
+            {activeProcess && (
+              <div className="flex ml-8 mt-2 mb-2 nav-text whitespace-nowrap">
+                <div className="w-[2px] h-6 bg-outline/20 mr-4 rounded-full"></div>
+                <span className="font-bold text-sm text-[#002733] flex items-center capitalize">{activeProcess}</span>
+              </div>
+            )}
+          </div>
           
-          <div className={`w-full flex items-center px-4 py-3 mx-2 transition-all font-label-md text-label-md ${isOperationOrMetricsView && !location.pathname.includes('/llenado') ? 'bg-secondary-container text-on-secondary-container rounded-full font-bold shadow-sm' : 'text-outline/50'}`}>
-            <span className="material-symbols-outlined mr-3">settings_heart</span>
-            Selección de Operación
+          <div>
+            <div 
+              onClick={() => activeProcess && navigate(`/proceso/${encodeURIComponent(activeProcess)}`)}
+              className={`w-full flex items-center px-4 py-3 transition-all font-label-md text-label-md rounded-lg ${isOperationView || isOverview ? 'bg-[#A3E4F9] text-[#002733] font-bold shadow-sm' : activeProcess ? 'text-on-surface-variant hover:text-secondary hover:bg-surface-container-high cursor-pointer' : 'text-outline/50 cursor-not-allowed'}`}
+            >
+              <span className="material-symbols-outlined mr-3 shrink-0">settings_heart</span>
+              <span className="nav-text whitespace-nowrap">Selección de Operación</span>
+            </div>
+            {activeOperation && (
+              <div className="flex ml-8 mt-2 mb-2 nav-text whitespace-nowrap">
+                <div className="w-[2px] h-6 bg-outline/20 mr-4 rounded-full"></div>
+                <span className="font-bold text-sm text-[#002733] flex items-center capitalize">{activeOperation}</span>
+              </div>
+            )}
           </div>
           
           {isOperationOrMetricsView && (
@@ -120,24 +180,32 @@ const AdminDashboard = () => {
             </button>
           )}
         </nav>
-        <div className="mt-auto border-t border-outline/10 pt-md space-y-sm">
+        <div className="mt-auto border-t border-outline/10 pt-md space-y-sm relative">
           <button 
             onClick={handleLogout}
             className="w-full flex items-center text-on-surface-variant hover:text-secondary px-4 py-3 mx-2 transition-all font-label-md text-label-md text-error"
           >
-            <span className="material-symbols-outlined mr-3 text-error">logout</span>
-            Cerrar Sesión
+            <span className="material-symbols-outlined mr-3 shrink-0 text-error">logout</span>
+            <span className="nav-text whitespace-nowrap">Cerrar Sesión</span>
+          </button>
+
+          {/* Toggle Button */}
+          <button 
+            onClick={() => setIsMinimized(!isMinimized)} 
+            className="absolute right-[-14px] top-1/2 -translate-y-1/2 bg-white border border-outline/20 shadow-md w-7 h-7 rounded-full flex items-center justify-center hover:bg-surface-container z-50 text-on-surface-variant transition-colors"
+          >
+            <span className="material-symbols-outlined text-[16px]">{isMinimized ? 'chevron_right' : 'chevron_left'}</span>
           </button>
         </div>
       </aside>
 
       {/* Main Content Canvas */}
-      <main className="ml-64 pt-8 pb-12 px-8 w-full overflow-y-auto">
+      <main className={`transition-all duration-500 ease-out pt-8 pb-12 px-8 w-full overflow-y-auto ${isMinimized ? 'ml-20' : 'ml-64'}`}>
         <Routes>
           <Route path="/" element={<ProcessCardsWrapper />} />
           <Route path="/proceso/:processId" element={<OperationsGridWrapper />} />
-          <Route path="/proceso/:processId/operacion/:operationId" element={<MetricsWrapper />} />
-          <Route path="/proceso/:processId/operacion/:operationId/llenado" element={<DataEntry />} />
+          <Route path="/proceso/:processId/operacion/:operationId" element={<OperationOverview />} />
+          <Route path="/proceso/:processId/operacion/:operationId/metrica/:metricId" element={<MetricsWrapper />} />
         </Routes>
       </main>
       
