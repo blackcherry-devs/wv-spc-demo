@@ -1,4 +1,5 @@
-import React from 'react';
+import { useEffect, useRef } from 'react';
+import gsap from 'gsap';
 
 const PROCESSES = [
   { name: "ZKG EA888",          opsOk: 8, opsNok: 1, lastSync: "Hace 5 min" },
@@ -13,6 +14,24 @@ const PROCESSES = [
 ];
 
 const ProcessCards = ({ onSelectProcess }) => {
+  const containerRef = useRef(null);
+
+  useEffect(() => {
+    if (!containerRef.current) return;
+    const cards = containerRef.current.querySelectorAll('.vw-process-card');
+    gsap.fromTo(cards, 
+      { opacity: 0, x: -80 },
+      { 
+        opacity: 1, 
+        x: 0, 
+        duration: 0.8, 
+        stagger: 0.08, 
+        ease: 'back.out(1.2)',
+        clearProps: 'transform,opacity'
+      }
+    );
+  }, []);
+
   return (
     <>
       <style>{`
@@ -33,9 +52,35 @@ const ProcessCards = ({ onSelectProcess }) => {
           border-radius: 20px;
           display: flex;
           flex-direction: column;
-          background: linear-gradient(45deg, rgb(4, 159, 187) 0%, rgb(80, 246, 255) 100%);
+          background: #ffffff;
           position: relative;
           padding: 56px 20px 20px 20px;
+        }
+
+        /* Soft Neumorphic Inset Slots */
+        .vw-process-card .vw-inset-slot {
+          background: #f4f6f9;
+          border: 1px solid rgba(0, 39, 51, 0.03);
+          box-shadow: inset 3px 3px 6px rgba(0, 39, 51, 0.06), inset -3px -3px 6px rgba(255, 255, 255, 0.9);
+        }
+
+        /* Neumorphic Raised Push Buttons */
+        .vw-process-card .vw-push-button {
+          background: #ffffff;
+          border: 1px solid rgba(0, 39, 51, 0.05);
+          box-shadow: 4px 4px 10px rgba(0, 39, 51, 0.06), -4px -4px 10px rgba(255, 255, 255, 0.9);
+          transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+        }
+
+        .vw-process-card .vw-push-button:hover {
+          background: #002733;
+          color: #ffffff !important;
+          box-shadow: 0px 4px 12px rgba(0, 39, 51, 0.15);
+          border-color: transparent;
+        }
+
+        .vw-process-card .vw-push-button:active {
+          transform: scale(0.98);
         }
 
         /* Diagonal cutout tab top-left */
@@ -123,7 +168,7 @@ const ProcessCards = ({ onSelectProcess }) => {
         }
       `}</style>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+      <div ref={containerRef} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
         {PROCESSES.map((process, index) => (
           <div
             key={index}
@@ -135,7 +180,7 @@ const ProcessCards = ({ onSelectProcess }) => {
               <div className="top-cutout-border"></div>
 
               {/* Absolute header content (non-skewed) */}
-              <div className="header-content">
+              <div className="header-content flex justify-between items-center w-full">
                 <div className="process-title-container">
                   <span className="process-title uppercase">{process.name}</span>
                 </div>
@@ -150,19 +195,19 @@ const ProcessCards = ({ onSelectProcess }) => {
 
               {/* OK / NOK Counters Grid */}
               <div className="flex items-center gap-4 mb-5">
-                <div className="flex-1 bg-white rounded-[24px] p-4 flex flex-col items-center border border-white/40 shadow-[0_4px_12px_rgba(0,0,0,0.03)]">
-                  <span className="text-3xl font-black text-green-700 leading-none">{process.opsOk}</span>
-                  <span className="text-[9px] font-black text-green-800 uppercase tracking-widest mt-2">Sistemas OK</span>
+                <div className="flex-1 vw-inset-slot rounded-[24px] p-4 flex flex-col items-center">
+                  <span className="text-3xl font-black text-green-600 leading-none">{process.opsOk}</span>
+                  <span className="text-[9px] font-black text-green-700 uppercase tracking-widest mt-2">Sistemas OK</span>
                 </div>
                 <div className="w-[1px] h-10 bg-[#002733]/10"></div>
-                <div className="flex-1 bg-white rounded-[24px] p-4 flex flex-col items-center border border-white/40 shadow-[0_4px_12px_rgba(0,0,0,0.03)]">
-                  <span className="text-3xl font-black text-red-700 leading-none">{process.opsNok}</span>
-                  <span className="text-[9px] font-black text-red-800 uppercase tracking-widest mt-2">Sistemas NOK</span>
+                <div className="flex-1 vw-inset-slot rounded-[24px] p-4 flex flex-col items-center">
+                  <span className="text-3xl font-black text-red-600 leading-none">{process.opsNok}</span>
+                  <span className="text-[9px] font-black text-red-700 uppercase tracking-widest mt-2">Sistemas NOK</span>
                 </div>
               </div>
 
               {/* Sync Time (Full width rounded bar) */}
-              <div className="flex items-center justify-center gap-2 mb-5 bg-white px-1 py-3 rounded-2xl w-full border border-white/40 shadow-[0_4px_12px_rgba(0,0,0,0.03)]">
+              <div className="flex items-center justify-center gap-2 mb-5 vw-inset-slot py-3 rounded-2xl w-full">
                 <span className="material-symbols-outlined text-[18px] text-[#002733] flex-shrink-0">history</span>
                 <span className="text-[#002733] text-xs font-bold">
                   Última Sincronización: <span className="font-extrabold">{process.lastSync}</span>
@@ -171,7 +216,7 @@ const ProcessCards = ({ onSelectProcess }) => {
 
               {/* Ver Detalles Button */}
               <button 
-                className="w-full py-4 rounded-2xl bg-white hover:bg-[#002733] text-[#002733] hover:text-white text-sm font-bold tracking-wide flex items-center justify-center gap-2 transition-all duration-300 border border-white/40 hover:border-transparent active:scale-[0.98] shadow-sm group/btn"
+                className="w-full py-4 rounded-2xl vw-push-button text-[#002733] text-sm font-bold tracking-wide flex items-center justify-center gap-2 active:scale-[0.98] group/btn"
               >
                 <span>Ver Detalles</span>
                 <span className="material-symbols-outlined text-[18px] transition-transform group-hover/btn:translate-x-1">arrow_forward</span>
