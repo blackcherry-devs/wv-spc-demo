@@ -1,13 +1,16 @@
 import React from 'react';
 import { LineChart, Line, XAxis, YAxis, ResponsiveContainer, ReferenceLine } from 'recharts';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams, useLocation } from 'react-router-dom';
 
 const OverviewChart = ({ title, status, data, lines, yDomain, referenceLines, metricId }) => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { processId, operationId } = useParams();
+  const isOperator = location.pathname.startsWith('/operator');
+  const base = isOperator ? '/operator' : '';
 
   const handleClick = () => {
-    navigate(`/proceso/${processId}/operacion/${operationId}/metrica/${metricId}`);
+    navigate(`${base}/proceso/${processId}/operacion/${operationId}/metrica/${metricId}`);
   };
 
   return (

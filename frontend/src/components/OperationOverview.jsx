@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import OverviewChart from './OverviewChart';
 import WaterTank from './WaterTank';
 
@@ -266,8 +266,10 @@ const PeriodModal = ({ onClose, onApply, currentWeek }) => {
 const OperationOverview = ({ isOperator = false }) => {
   const { processId, operationId } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
   const decodedProcess = decodeURIComponent(processId || '');
   const decodedOperation = decodeURIComponent(operationId || '');
+  const base = location.pathname.startsWith('/operator') ? '/operator' : '';
 
   // Modals state
   const [showSectionsModal, setShowSectionsModal] = useState(false);
@@ -323,7 +325,7 @@ const OperationOverview = ({ isOperator = false }) => {
       <div className="flex justify-between items-end mb-lg">
         <div>
           <nav className="flex items-center gap-xs text-on-surface-variant font-label-md text-label-md mb-xs">
-            <span className="cursor-pointer hover:text-secondary" onClick={() => navigate('/')}>Proceso: {decodedProcess}</span>
+            <span className="cursor-pointer hover:text-secondary" onClick={() => navigate(`${base}/`)}>Proceso: {decodedProcess}</span>
             <span className="material-symbols-outlined text-[12px]">chevron_right</span>
             <span className="text-secondary font-bold">{decodedOperation}</span>
           </nav>
