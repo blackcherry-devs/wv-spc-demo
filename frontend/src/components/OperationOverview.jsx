@@ -303,6 +303,51 @@ const OperationOverview = ({ isOperator = false }) => {
         return res.json();
       })
       .then(data => {
+        const storageKey = `spc_records_${decodedProcess}_${decodedOperation}`;
+        const sessionRecords = JSON.parse(sessionStorage.getItem(storageKey) || '[]');
+        
+        sessionRecords.forEach(newRecord => {
+          const shortDate = newRecord.day ? newRecord.day.split('-').slice(0, 2).join('-') : 'Hoy';
+
+          const updateMetric = (category, metricId, valKey, valSource) => {
+            const metric = data[category].find(m => m.metricId === metricId);
+            if (metric && valSource !== undefined && valSource !== null) {
+              let pt = metric.data.find(d => d.date === shortDate);
+              if (!pt) {
+                pt = { date: shortDate };
+                metric.data.push(pt);
+              }
+              if (valKey === 'conc-ph') {
+                pt.conc = newRecord.conc !== undefined ? newRecord.conc : pt.conc;
+                pt.ph = newRecord.ph !== undefined ? newRecord.ph : pt.ph;
+              } else {
+                pt.val = valSource;
+              }
+            }
+          };
+
+          updateMetric('laboratorio', 'conc-ph', 'conc-ph', newRecord.conc);
+          updateMetric('laboratorio', 'tasa-reposicion', 'val', newRecord.repo);
+          updateMetric('laboratorio', 'conductividad', 'val', newRecord.cond2);
+          updateMetric('proceso', 'niveles-tanque', 'val', newRecord.level || newRecord.nivelTanque);
+          updateMetric('proceso', 'temp-trabajo', 'val', newRecord.tempTrabajo);
+          updateMetric('proceso', 'presion-suministro', 'val', newRecord.presionSuministro);
+          updateMetric('proceso', 'nivel-mirilla', 'val', newRecord.nivelMirilla);
+          updateMetric('proceso', 'func-filtros', 'val', newRecord.filtroStatus === 'SI' ? 1 : 0);
+          updateMetric('proceso', 'func-skimmer', 'val', newRecord.skimmerStatus === 'SI' ? 1 : 0);
+          updateMetric('proceso', 'func-recolector', 'val', newRecord.recolectorStatus === 'SI' ? 1 : 0);
+          updateMetric('proceso', 'control-adiciones', 'val', newRecord.adicionesStatus === 'SI' ? 1 : 0);
+          updateMetric('bitacora', 'adicion-material', 'val', newRecord.matAdd);
+          updateMetric('bitacora', 'adicion-agua', 'val', newRecord.waterAdd);
+          updateMetric('bitacora', 'estatus-operativo', 'val', newRecord.estatusFinal === 'OK' ? 1 : 0);
+          
+          if (newRecord.waterAdd && data.waterTank) {
+             data.waterTank.adicionAguaToday += newRecord.waterAdd;
+             data.waterTank.actual = Math.min(data.waterTank.actual + newRecord.waterAdd, data.waterTank.capacidad);
+             data.waterTank.level = Math.round((data.waterTank.actual / data.waterTank.capacidad) * 100);
+          }
+        });
+
         const allMetrics = [
           ...data.laboratorio.map(m => m.metricId),
           ...data.proceso.map(m => m.metricId),

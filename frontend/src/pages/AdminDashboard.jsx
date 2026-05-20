@@ -24,7 +24,7 @@ const OperationsGridWrapper = () => {
 };
 
 const MetricsWrapper = () => {
-  const { processId, operationId } = useParams();
+  const { processId, operationId, metricId } = useParams();
   const navigate = useNavigate();
   const decodedProcess = decodeURIComponent(processId);
   const decodedOperation = decodeURIComponent(operationId);
@@ -52,7 +52,7 @@ const MetricsWrapper = () => {
       </header>
 
       <div className="w-full">
-        <ChartDetail processName={decodedOperation} />
+        <ChartDetail processName={decodedOperation} processId={processId} operationId={operationId} metricId={metricId} />
       </div>
     </div>
   );
@@ -158,9 +158,12 @@ const AdminDashboard = () => {
               <span className="nav-text whitespace-nowrap">Selección de Operación</span>
             </div>
             {activeOperation && (
-              <div className="flex ml-8 mt-2 mb-2 nav-text whitespace-nowrap">
+              <div 
+                className="flex ml-8 mt-2 mb-2 nav-text whitespace-nowrap cursor-pointer hover:opacity-80"
+                onClick={() => navigate(`/proceso/${encodeURIComponent(activeProcess)}/operacion/${encodeURIComponent(activeOperation)}`)}
+              >
                 <div className="w-[2px] h-6 bg-outline/20 mr-4 rounded-full"></div>
-                <span className="font-bold text-sm text-[#002733] flex items-center capitalize">{activeOperation}</span>
+                <span className="font-bold text-sm text-[#002733] flex items-center capitalize hover:text-secondary transition-colors">{activeOperation}</span>
               </div>
             )}
           </div>
