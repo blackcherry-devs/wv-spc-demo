@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import { useEffect, useRef } from 'react';
 import gsap from 'gsap';
 
 const WaterTank = ({ level = 50 }) => {
@@ -9,8 +9,8 @@ const WaterTank = ({ level = 50 }) => {
   const normalizedLevel = Math.max(0, Math.min(100, level));
   
   // SVG coordinates
-  const height = 300;
-  const width = 150;
+  const height = 160;
+  const width = 80;
   const fillHeight = (normalizedLevel / 100) * height;
   const yPosition = height - fillHeight;
 
@@ -29,11 +29,11 @@ const WaterTank = ({ level = 50 }) => {
 
     // Subtle vertical bobbing for realism
     const bobAnim1 = gsap.to(backWaveRef.current, {
-      y: -3, duration: 1.5, yoyo: true, repeat: -1, ease: "sine.inOut"
+      y: -2, duration: 1.5, yoyo: true, repeat: -1, ease: "sine.inOut"
     });
 
     const bobAnim2 = gsap.to(frontWaveRef.current, {
-      y: 3, duration: 1.2, yoyo: true, repeat: -1, ease: "sine.inOut"
+      y: 2, duration: 1.2, yoyo: true, repeat: -1, ease: "sine.inOut"
     });
 
     return () => {
@@ -52,7 +52,7 @@ const WaterTank = ({ level = 50 }) => {
           width={width}
           height={height}
           viewBox={`0 0 ${width} ${height}`}
-          className="absolute inset-0 drop-shadow-xl"
+          className="absolute inset-0 drop-shadow-md"
         >
           <defs>
             <linearGradient id="tankGradient" x1="0%" y1="0%" x2="100%" y2="0%">
@@ -81,24 +81,24 @@ const WaterTank = ({ level = 50 }) => {
             y="0"
             width={width}
             height={height}
-            rx="20"
-            ry="20"
+            rx="16"
+            ry="16"
             fill="url(#tankGradient)"
             stroke="#94a3b8"
-            strokeWidth="4"
+            strokeWidth="3"
             opacity="0.6"
           />
 
           {/* Water Fill with Wave Animation */}
           <g>
             <clipPath id="waterClip">
-              <rect x="2" y="2" width={width - 4} height={height - 4} rx="18" ry="18" />
+              <rect x="2" y="2" width={width - 4} height={height - 4} rx="14" ry="14" />
             </clipPath>
             <g clipPath="url(#waterClip)">
               {/* Deep Water Rect (below the waves) */}
               <rect
                 x="0"
-                y={yPosition + 5}
+                y={yPosition + 3}
                 width={width}
                 height={height}
                 fill="url(#waterGradient)"
@@ -109,7 +109,7 @@ const WaterTank = ({ level = 50 }) => {
                 {/* Back wave */}
                 <path
                   ref={backWaveRef}
-                  d={`M 0 0 Q ${width/4} -12 ${width/2} 0 T ${width} 0 T ${width*1.5} 0 T ${width*2} 0 L ${width*2} ${height} L 0 ${height} Z`}
+                  d={`M 0 0 Q ${width/4} -6 ${width/2} 0 T ${width} 0 T ${width*1.5} 0 T ${width*2} 0 L ${width*2} ${height} L 0 ${height} Z`}
                   fill="#00B0F0"
                   opacity="0.5"
                 />
@@ -117,25 +117,25 @@ const WaterTank = ({ level = 50 }) => {
                 {/* Front wave */}
                 <path
                   ref={frontWaveRef}
-                  d={`M 0 0 Q ${width/4} 12 ${width/2} 0 T ${width} 0 T ${width*1.5} 0 T ${width*2} 0 L ${width*2} ${height} L 0 ${height} Z`}
+                  d={`M 0 0 Q ${width/4} 6 ${width/2} 0 T ${width} 0 T ${width*1.5} 0 T ${width*2} 0 L ${width*2} ${height} L 0 ${height} Z`}
                   fill="url(#waterGradient)"
                 />
               </g>
             </g>
           </g>
 
-          {/* Level Markers */}
-          <line x1="10" y1={height * 0.25} x2="30" y2={height * 0.25} stroke="#64748b" strokeWidth="2" />
-          <line x1="10" y1={height * 0.5} x2="30" y2={height * 0.5} stroke="#64748b" strokeWidth="2" />
-          <line x1="10" y1={height * 0.75} x2="30" y2={height * 0.75} stroke="#64748b" strokeWidth="2" />
+          {/* Level Markers - neatly aligned to the left edge */}
+          <line x1="6" y1={height * 0.25} x2="16" y2={height * 0.25} stroke="#64748b" strokeWidth="1.5" />
+          <line x1="6" y1={height * 0.5} x2="16" y2={height * 0.5} stroke="#64748b" strokeWidth="1.5" />
+          <line x1="6" y1={height * 0.75} x2="16" y2={height * 0.75} stroke="#64748b" strokeWidth="1.5" />
         </svg>
 
         {/* Level Overlay Text */}
-        <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-          <span className={`text-4xl font-bold ${normalizedLevel > 40 ? 'text-white' : 'text-vw-blue'} drop-shadow-md transition-colors duration-1000`}>
+        <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none select-none">
+          <span className={`text-2xl font-black ${normalizedLevel > 40 ? 'text-white' : 'text-[#002733]'} drop-shadow-sm transition-colors duration-1000`}>
             {normalizedLevel}%
           </span>
-          <span className={`text-sm font-semibold tracking-widest ${normalizedLevel > 40 ? 'text-cyan-100' : 'text-gray-500'} mt-1 transition-colors duration-1000`}>
+          <span className={`text-[8px] font-black tracking-widest ${normalizedLevel > 40 ? 'text-cyan-100' : 'text-gray-500'} mt-0.5 transition-colors duration-1000`}>
             NIVEL
           </span>
         </div>

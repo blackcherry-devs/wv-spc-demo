@@ -22,7 +22,7 @@ const Header = () => {
             </div>
             <span className="font-title-md text-sm md:text-lg tracking-tight">SISTEMA SPC DIGITAL</span>
             <div className="h-6 w-[1px] bg-white/30 mx-2 hidden sm:block"></div>
-            <span className="hidden sm:inline-block text-xs font-label-md text-secondary-container tracking-widest uppercase">PLANTA GUANAJUATO</span>
+            <span className="hidden sm:inline-block text-xs font-label-md text-secondary-container tracking-widest uppercase">PLANTA SILAO</span>
           </div>
 
           {user && (

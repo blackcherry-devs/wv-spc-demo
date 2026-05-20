@@ -1,4 +1,3 @@
-import React from 'react';
 import { LineChart, Line, XAxis, YAxis, ResponsiveContainer, ReferenceLine } from 'recharts';
 import { useNavigate, useParams, useLocation } from 'react-router-dom';
 
@@ -16,7 +15,7 @@ const OverviewChart = ({ title, status, data, lines, yDomain, referenceLines, me
   return (
     <div 
       onClick={handleClick}
-      className="bg-white border border-outline/10 p-xl shadow-sm cursor-pointer hover:shadow-md hover:border-secondary/50 transition-all group rounded-3xl flex flex-col h-full"
+      className="bg-white border border-outline/10 p-6 shadow-sm cursor-pointer hover:shadow-md hover:border-secondary/50 transition-all group rounded-3xl flex flex-col h-full"
     >
       <div className="flex justify-between items-start mb-6">
         <h3 className="font-title-lg text-on-surface text-base uppercase group-hover:text-secondary transition-colors leading-tight pr-4">{title}</h3>

@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
+import gsap from 'gsap';
 import OverviewChart from './OverviewChart';
 import WaterTank from './WaterTank';
 
@@ -10,23 +11,40 @@ const ExpandableSection = ({ title, children, visibleCount = 2 }) => {
   const childrenArray = React.Children.toArray(children);
   const visibleChildren = expanded ? childrenArray : childrenArray.slice(0, visibleCount);
   const hasMore = childrenArray.length > visibleCount;
+  const containerRef = useRef(null);
+
+  useEffect(() => {
+    if (!containerRef.current) return;
+    const items = containerRef.current.querySelectorAll('.grid > div');
+    gsap.fromTo(items,
+      { opacity: 0, x: -60 },
+      {
+        opacity: 1,
+        x: 0,
+        duration: 0.7,
+        stagger: 0.08,
+        ease: 'back.out(1.2)',
+        clearProps: 'transform,opacity'
+      }
+    );
+  }, [visibleChildren.length]);
 
   return (
-    <section className="bg-white rounded-3xl shadow-sm border border-outline/10 p-xl">
-      <div className="flex items-center gap-sm mb-xl border-b border-outline/5 pb-4">
+    <section ref={containerRef} className="bg-white rounded-3xl shadow-sm border border-outline/10 p-6 md:p-8">
+      <div className="flex items-center gap-3 mb-6 border-b border-outline/5 pb-4">
         <div className="w-1.5 h-6 bg-secondary rounded-full"></div>
         <h2 className="font-headline-lg-mobile text-headline-lg-mobile text-primary">{title}</h2>
       </div>
       
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-xl">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 md:gap-8">
         {visibleChildren}
       </div>
       
       {hasMore && (
-        <div className="flex justify-center mt-lg border-t border-outline/5 pt-4">
+        <div className="flex justify-center mt-6 border-t border-outline/5 pt-4">
           <button 
             onClick={() => setExpanded(!expanded)}
-            className="flex items-center gap-xs text-secondary font-bold font-title-md hover:bg-secondary/5 px-4 py-2 rounded-lg transition-colors"
+            className="flex items-center gap-2 text-secondary font-bold font-title-md hover:bg-secondary/5 px-4 py-2 rounded-lg transition-colors"
           >
             <span>{expanded ? 'Mostrar menos' : 'Ver más gráficas'}</span>
             <span className="material-symbols-outlined transition-transform" style={{ transform: expanded ? 'rotate(180deg)' : 'none' }}>
@@ -40,6 +58,8 @@ const ExpandableSection = ({ title, children, visibleCount = 2 }) => {
 };
 
 const SectionsModal = ({ apiData, activeSections, activeMetrics, onApply, onClose }) => {
+  const { operationId } = useParams();
+  const decodedOperation = decodeURIComponent(operationId || '');
   const [tempSections, setTempSections] = useState([...activeSections]);
   const [tempMetrics, setTempMetrics] = useState([...activeMetrics]);
 
@@ -75,56 +95,84 @@ const SectionsModal = ({ apiData, activeSections, activeMetrics, onApply, onClos
   const renderMetricButtons = (categoryData, categoryName) => {
     return (
       <div className="animate-in fade-in slide-in-from-bottom-2 duration-300">
-        <div className="flex items-center gap-sm mb-sm">
-            <div className="w-1 h-4 bg-secondary rounded-full"></div>
-            <h4 className="font-bold text-on-surface-variant text-sm uppercase">Gráficas de {categoryName}</h4>
+        <div className="flex items-center gap-2 mb-3 mt-4">
+            <div className="w-1.5 h-4 bg-secondary rounded-full"></div>
+            <h4 className="font-bold text-[#002733]/85 text-xs uppercase tracking-wider">Métricas de {categoryName}</h4>
         </div>
-        <div className="grid grid-cols-4 gap-sm">
-          {categoryData.map((m) => (
-            <button 
-              key={m.metricId}
-              onClick={() => toggleMetric(m.metricId)}
-              className={`h-16 border rounded flex items-center justify-center text-[10px] font-bold text-center px-2 transition-colors ${tempMetrics.includes(m.metricId) ? 'bg-secondary/10 border-secondary text-secondary' : 'bg-surface border-outline/10 text-on-surface-variant'}`}
-            >
-              {m.title}
-            </button>
-          ))}
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+          {categoryData.map((m) => {
+            const isChecked = tempMetrics.includes(m.metricId);
+            return (
+              <button 
+                key={m.metricId}
+                onClick={() => toggleMetric(m.metricId)}
+                className={`h-14 border rounded-xl flex items-center justify-center text-xs font-bold text-center px-3 transition-all duration-200 active:scale-95 ${isChecked ? 'bg-[#00B0F0]/10 border-[#00B0F0] text-[#002733] shadow-sm font-extrabold' : 'bg-white border-outline/10 text-on-surface-variant hover:border-[#00B0F0]/50 hover:bg-[#00B0F0]/5'}`}
+              >
+                {m.title}
+              </button>
+            );
+          })}
         </div>
       </div>
     );
   };
 
   return (
-    <div className="fixed inset-0 z-[70] flex items-center justify-center p-lg">
+    <div className="fixed inset-0 z-[70] flex items-center justify-center p-4">
       <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={onClose}></div>
-      <div className="relative bg-white w-full max-w-2xl rounded-2xl shadow-2xl flex flex-col max-h-[90vh] my-[5vh]">
-        <div className="p-lg border-b border-outline/10 flex justify-between items-center">
-          <h3 className="font-headline-lg-mobile text-primary">Selecciona Secciones</h3>
-          <button className="p-2 hover:bg-surface-container rounded-lg" onClick={onClose}><span className="material-symbols-outlined">close</span></button>
+      <div className="relative bg-white w-full max-w-2xl rounded-[28px] shadow-2xl border border-outline/10 overflow-hidden flex flex-col max-h-[90vh]">
+        {/* Modal Header */}
+        <div className="bg-[#001016] px-8 py-6 flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <div className="w-12 h-12 bg-white/10 rounded-full flex items-center justify-center text-white flex-shrink-0">
+              <span className="material-symbols-outlined text-2xl">filter_alt</span>
+            </div>
+            <div>
+              <h3 className="font-headline-lg-mobile text-white font-bold">Seleccionar Secciones</h3>
+              <p className="text-white/60 font-label-md text-xs mt-0.5">Semana 20 — {decodedOperation}</p>
+            </div>
+          </div>
+          <button className="p-2 hover:bg-white/10 rounded-full text-white/70 hover:text-white transition-colors" onClick={onClose}>
+            <span className="material-symbols-outlined">close</span>
+          </button>
         </div>
-        <div className="p-lg flex-1 overflow-y-auto">
-          <div className="flex gap-lg mb-xl border-b border-outline/5 pb-lg">
+
+        {/* Modal Body */}
+        <div className="p-8 flex-1 overflow-y-auto">
+          {/* Blue Info Box */}
+          <div className="bg-[#ebf4ff] border border-blue-100 rounded-2xl p-6 mb-6 flex items-start gap-4">
+            <span className="material-symbols-outlined text-blue-600 text-2xl mt-0.5 flex-shrink-0">info</span>
+            <div>
+              <p className="font-title-md text-[#002733] font-bold mb-1">Categorías de Dashboard</p>
+              <p className="text-[#002733]/70 font-body-md text-sm leading-relaxed">
+                Active las categorías para habilitar sus gráficos específicos y luego seleccione las métricas que desea visualizar en tiempo real.
+              </p>
+            </div>
+          </div>
+
+          {/* Section Selector Checkboxes */}
+          <div className="flex flex-col md:flex-row gap-4 mb-6 bg-surface-container/30 p-5 rounded-2xl border border-outline/5 justify-between">
             {[
               { id: 'lab', label: 'Análisis de Laboratorio' },
               { id: 'process', label: 'Análisis de Proceso' },
               { id: 'log', label: 'Bitácora y Adiciones' }
             ].map(sec => (
-              <label key={sec.id} className="flex items-center gap-sm cursor-pointer group">
+              <label key={sec.id} className="flex items-center gap-3 cursor-pointer group select-none">
                 <input 
                   type="checkbox" 
                   checked={tempSections.includes(sec.id)} 
                   onChange={() => toggleSection(sec.id)} 
-                  className="w-5 h-5 rounded border-outline/30 text-secondary focus:ring-secondary"
+                  className="w-5 h-5 rounded border-outline/30 text-secondary focus:ring-secondary cursor-pointer"
                 />
-                <span className="font-title-md text-on-surface group-hover:text-secondary">{sec.label}</span>
+                <span className="font-title-md text-[#002733] font-semibold group-hover:text-secondary transition-colors text-sm">{sec.label}</span>
               </label>
             ))}
           </div>
           
-          <div className="space-y-lg min-h-[200px]">
+          <div className="space-y-6 min-h-[150px]">
             {!hasSelections && (
               <div className="text-on-surface-variant italic text-center py-10">
-                Selecciona una categoría para ver sus métricas específicas.
+                Seleccione al menos una categoría para configurar sus métricas de calidad.
               </div>
             )}
             
@@ -133,12 +181,18 @@ const SectionsModal = ({ apiData, activeSections, activeMetrics, onApply, onClos
             {tempSections.includes('log') && renderMetricButtons(apiData.bitacora, 'Bitácora y Adiciones')}
           </div>
         </div>
-        <div className="p-lg border-t border-outline/10 bg-surface-container-low flex justify-between items-center rounded-b-2xl">
-          <button className="text-on-surface-variant font-bold hover:text-primary" onClick={handleClear}>Limpiar Filtros</button>
-          <div className="flex gap-md">
-            <button className="px-lg py-2 border border-outline/20 rounded-lg hover:bg-surface-container transition-colors bg-white font-bold" onClick={onClose}>Cerrar</button>
+
+        {/* Modal Footer */}
+        <div className="px-8 py-6 border-t border-outline/5 bg-surface-container-low/50 flex justify-between items-center">
+          <button className="text-on-surface-variant font-bold hover:text-primary transition-colors text-sm" onClick={handleClear}>
+            Restablecer Todo
+          </button>
+          <div className="flex gap-3">
+            <button className="px-6 py-3 border border-outline/20 rounded-xl hover:bg-surface-container transition-colors bg-white font-bold text-sm" onClick={onClose}>
+              Cancelar
+            </button>
             <button 
-              className={`px-lg py-2 rounded-lg transition-all font-bold ${hasSelections ? 'bg-primary text-on-primary hover:opacity-90' : 'bg-outline text-white/50 cursor-not-allowed'}`}
+              className={`px-8 py-3 rounded-xl transition-all font-bold text-sm shadow-md active:scale-95 ${hasSelections ? 'bg-[#001016] text-white hover:opacity-90' : 'bg-outline text-white/50 cursor-not-allowed'}`}
               disabled={!hasSelections}
               onClick={handleApply}
             >
@@ -152,31 +206,41 @@ const SectionsModal = ({ apiData, activeSections, activeMetrics, onApply, onClos
 };
 
 const PeriodModal = ({ onClose, onApply, currentWeek }) => {
+  const { operationId } = useParams();
+  const decodedOperation = decodeURIComponent(operationId || '');
   const [selectedYear, setSelectedYear] = useState('2026');
   const [selectedMonth, setSelectedMonth] = useState('Mayo');
   const [selectedWeek, setSelectedWeek] = useState(currentWeek || 20);
 
   return (
-    <div className="fixed inset-0 z-[70] flex items-center justify-center p-lg">
+    <div className="fixed inset-0 z-[70] flex items-center justify-center p-4">
       <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={onClose}></div>
-      <div className="relative bg-white w-full max-w-md rounded-2xl shadow-2xl flex flex-col overflow-hidden">
-        {/* Header */}
-        <div className="p-lg bg-white flex justify-between items-center border-b border-outline/10">
-          <h3 className="font-body-lg text-on-surface">Seleccionar Periodo</h3>
-          <button className="p-2 hover:bg-surface-container rounded-lg text-on-surface-variant" onClick={onClose}>
+      <div className="relative bg-white w-full max-w-md rounded-[28px] shadow-2xl border border-outline/10 overflow-hidden flex flex-col">
+        {/* Modal Header */}
+        <div className="bg-[#001016] px-8 py-6 flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <div className="w-12 h-12 bg-white/10 rounded-full flex items-center justify-center text-white flex-shrink-0">
+              <span className="material-symbols-outlined text-2xl">calendar_today</span>
+            </div>
+            <div>
+              <h3 className="font-headline-lg-mobile text-white font-bold">Seleccionar Periodo</h3>
+              <p className="text-white/60 font-label-md text-xs mt-0.5">Semana {selectedWeek} — {decodedOperation}</p>
+            </div>
+          </div>
+          <button className="p-2 hover:bg-white/10 rounded-full text-white/70 hover:text-white transition-colors" onClick={onClose}>
             <span className="material-symbols-outlined">close</span>
           </button>
         </div>
 
-        {/* Content */}
-        <div className="p-lg flex-1 overflow-y-auto bg-white">
+        {/* Modal Body */}
+        <div className="p-8 flex-1 overflow-y-auto">
           {/* Selectors */}
-          <div className="grid grid-cols-2 gap-md mb-xl">
+          <div className="grid grid-cols-2 gap-4 mb-6">
             <div>
-              <label className="block text-[10px] font-bold text-on-surface-variant uppercase mb-xs tracking-wider">Año</label>
+              <label className="block text-[10px] font-bold text-on-surface-variant uppercase mb-2 tracking-wider">Año</label>
               <div className="relative">
                 <select 
-                  className="w-full appearance-none bg-white border border-outline/20 rounded-lg px-md py-3 text-on-surface font-title-md focus:border-secondary focus:ring-1 focus:ring-secondary outline-none"
+                  className="w-full appearance-none bg-white border border-outline/20 rounded-xl px-4 py-3 text-on-surface font-title-md focus:border-[#00B0F0] focus:ring-1 focus:ring-[#00B0F0] outline-none cursor-pointer"
                   value={selectedYear}
                   onChange={(e) => setSelectedYear(e.target.value)}
                 >
@@ -187,10 +251,10 @@ const PeriodModal = ({ onClose, onApply, currentWeek }) => {
               </div>
             </div>
             <div>
-              <label className="block text-[10px] font-bold text-on-surface-variant uppercase mb-xs tracking-wider">Mes</label>
+              <label className="block text-[10px] font-bold text-on-surface-variant uppercase mb-2 tracking-wider">Mes</label>
               <div className="relative">
                 <select 
-                  className="w-full appearance-none bg-white border border-outline/20 rounded-lg px-md py-3 text-on-surface font-title-md focus:border-secondary focus:ring-1 focus:ring-secondary outline-none"
+                  className="w-full appearance-none bg-white border border-outline/20 rounded-xl px-4 py-3 text-on-surface font-title-md focus:border-[#00B0F0] focus:ring-1 focus:ring-[#00B0F0] outline-none cursor-pointer"
                   value={selectedMonth}
                   onChange={(e) => setSelectedMonth(e.target.value)}
                 >
@@ -205,9 +269,9 @@ const PeriodModal = ({ onClose, onApply, currentWeek }) => {
             </div>
           </div>
 
-          {/* Calendar */}
-          <div className="mb-lg">
-            <div className="grid grid-cols-8 gap-1 mb-2 text-center text-[10px] font-bold text-on-surface-variant">
+          {/* Calendar Grid */}
+          <div className="mb-6">
+            <div className="grid grid-cols-8 gap-1 mb-2 text-center text-[10px] font-extrabold text-[#002733]/60">
               <div className="text-left flex items-end pb-1">SEMANA</div>
               <div className="pb-1">L</div>
               <div className="pb-1">M</div>
@@ -228,14 +292,14 @@ const PeriodModal = ({ onClose, onApply, currentWeek }) => {
               <div key={row.week} className="grid grid-cols-8 gap-1 mb-2">
                 <button 
                   onClick={() => setSelectedWeek(row.week)}
-                  className={`h-10 text-[10px] font-bold rounded flex items-center justify-center transition-colors ${selectedWeek === row.week ? 'bg-secondary/10 text-secondary border border-secondary' : 'bg-surface-container-low border border-transparent text-on-surface-variant hover:border-outline/20'}`}
+                  className={`h-10 text-[10px] font-bold rounded-lg flex items-center justify-center transition-all ${selectedWeek === row.week ? 'bg-[#00B0F0]/10 text-[#002733] border border-[#00B0F0] font-extrabold shadow-sm' : 'bg-surface-container-low border border-transparent text-on-surface-variant hover:border-outline/20'}`}
                 >
-                  [ Sem {row.week} ]
+                  Sem {row.week}
                 </button>
                 {row.days.map((day, idx) => (
                   <div 
                     key={idx} 
-                    className={`h-10 text-sm rounded flex items-center justify-center border transition-colors ${day ? 'bg-white border-outline/10 text-on-surface font-body-md' : 'bg-transparent border-transparent'} ${selectedWeek === row.week && day ? 'border-secondary/30 bg-secondary/5 font-bold' : ''}`}
+                    className={`h-10 text-xs rounded-lg flex items-center justify-center border transition-all ${day ? 'bg-white border-outline/10 text-on-surface font-bold' : 'bg-transparent border-transparent'} ${selectedWeek === row.week && day ? 'border-[#00B0F0]/30 bg-[#00B0F0]/5 font-black text-[#002733]' : ''}`}
                   >
                     {day}
                   </div>
@@ -244,18 +308,25 @@ const PeriodModal = ({ onClose, onApply, currentWeek }) => {
             ))}
           </div>
 
-          {/* Info banner */}
-          <div className="bg-surface-container-low rounded-lg p-3 mt-4 flex items-center gap-3 text-on-surface-variant">
-            <span className="material-symbols-outlined text-[18px]">info</span>
-            <p className="text-[11px] leading-tight flex-1">Selecciona una semana o un día específico para actualizar la vista.</p>
+          {/* Info Banner */}
+          <div className="bg-[#ebf4ff] border border-blue-100 rounded-2xl p-4 flex items-center gap-3 text-[#002733]/80">
+            <span className="material-symbols-outlined text-blue-600 text-[20px] flex-shrink-0">info</span>
+            <p className="text-[11px] leading-relaxed flex-1 font-semibold">
+              Seleccione una semana o un día específico para actualizar la visualización de la bitácora del dashboard.
+            </p>
           </div>
         </div>
 
-        {/* Footer */}
-        <div className="p-lg bg-surface-container-low/50 flex justify-between items-center border-t border-outline/5">
-          <button className="px-6 py-3 font-bold text-on-surface hover:text-primary transition-colors flex-1" onClick={onClose}>Cancelar</button>
-          <button className="px-6 py-3 bg-[#002733] text-white rounded-lg font-bold hover:opacity-90 transition-opacity flex-1 ml-4" onClick={() => { onApply(selectedWeek); onClose(); }}>
-            Confirmar Selección
+        {/* Modal Footer */}
+        <div className="px-8 py-6 border-t border-outline/5 bg-surface-container-low/50 flex justify-between items-center gap-4">
+          <button className="px-6 py-3 border border-outline/20 rounded-xl hover:bg-surface-container transition-colors bg-white font-bold text-sm flex-1" onClick={onClose}>
+            Cancelar
+          </button>
+          <button 
+            className="px-6 py-3 bg-[#001016] text-white rounded-xl font-bold hover:opacity-90 transition-all active:scale-[0.98] shadow-md flex-1" 
+            onClick={() => { onApply(selectedWeek); onClose(); }}
+          >
+            Confirmar
           </button>
         </div>
       </div>
@@ -364,10 +435,34 @@ const OperationOverview = ({ isOperator = false }) => {
       });
   }, [decodedProcess, decodedOperation]);
 
+  const mainContainerRef = useRef(null);
+
+  useEffect(() => {
+    if (loading || !mainContainerRef.current) return;
+
+    // 1. Animate header elements
+    const headerTitle = mainContainerRef.current.querySelector('.flex.justify-between.items-end');
+    if (headerTitle) {
+      gsap.fromTo(headerTitle,
+        { opacity: 0, y: -30 },
+        { opacity: 1, y: 0, duration: 0.6, ease: 'back.out(1.1)', clearProps: 'all' }
+      );
+    }
+
+    // 2. Animate filter cards block & water capacity card
+    const filterBlocks = mainContainerRef.current.querySelectorAll('.grid-cols-12 > div');
+    if (filterBlocks.length > 0) {
+      gsap.fromTo(filterBlocks,
+        { opacity: 0, x: -60 },
+        { opacity: 1, x: 0, duration: 0.7, stagger: 0.1, ease: 'back.out(1.1)', clearProps: 'all' }
+      );
+    }
+  }, [loading]);
+
   return (
-    <div className="animate-in fade-in duration-500 pb-12">
+    <div ref={mainContainerRef} className="animate-in fade-in duration-500 pb-12">
       {/* Header - Always visible */}
-      <div className="flex justify-between items-end mb-lg">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6 mb-8 md:mb-12">
         <div>
           <nav className="flex items-center gap-xs text-on-surface-variant font-label-md text-label-md mb-xs">
             <span className="cursor-pointer hover:text-secondary" onClick={() => navigate(`${base}/`)}>Proceso: {decodedProcess}</span>
@@ -419,11 +514,11 @@ const OperationOverview = ({ isOperator = false }) => {
       ) : (
         <>
           {/* Filters and Status */}
-          <div className="grid grid-cols-12 gap-xl mb-2xl items-stretch">
-            <div className="col-span-12 lg:col-span-8 flex flex-row items-center gap-md">
+          <div className="grid grid-cols-12 gap-6 md:gap-8 mb-8 md:mb-12 items-stretch">
+            <div className="col-span-12 lg:col-span-8 flex flex-row items-center gap-4">
               <button 
                 onClick={() => setShowSectionsModal(true)}
-                className="flex items-center gap-sm px-xl py-6 bg-white border border-secondary text-secondary rounded-3xl font-title-lg hover:bg-secondary/5 transition-colors whitespace-nowrap shadow-sm cursor-pointer"
+                className="flex items-center gap-3 px-6 py-4 bg-white border border-secondary text-secondary rounded-3xl font-title-lg hover:bg-secondary/5 transition-colors whitespace-nowrap shadow-sm cursor-pointer"
               >
                 <span className="material-symbols-outlined text-secondary text-2xl">filter_alt</span>
                 <span className="flex-1 text-left">Seleccionar Secciones</span>
@@ -431,7 +526,7 @@ const OperationOverview = ({ isOperator = false }) => {
               {isOperator && (
                 <button 
                   onClick={() => setShowEditModal(true)}
-                  className="flex items-center gap-sm px-xl py-6 bg-primary text-on-primary rounded-3xl font-title-lg hover:opacity-90 transition-opacity whitespace-nowrap shadow-sm cursor-pointer"
+                  className="flex items-center gap-3 px-6 py-4 bg-primary text-on-primary rounded-3xl font-title-lg hover:opacity-90 transition-opacity whitespace-nowrap shadow-sm cursor-pointer"
                 >
                   <span className="material-symbols-outlined text-2xl">edit_note</span>
                   <span className="flex-1 text-left">Editar Información</span>
@@ -439,7 +534,7 @@ const OperationOverview = ({ isOperator = false }) => {
               )}
             </div>
             <div className="col-span-12 lg:col-span-4">
-              <div className="bg-white border border-outline/10 rounded-3xl p-xl shadow-sm flex flex-row items-center gap-xl h-full">
+              <div className="bg-white border border-outline/10 rounded-3xl p-6 shadow-sm flex flex-row items-center gap-6 h-full">
                 <div className="h-full flex items-center justify-center flex-shrink-0">
                     <WaterTank level={apiData.waterTank.level} />
                 </div>
@@ -459,7 +554,7 @@ const OperationOverview = ({ isOperator = false }) => {
           </div>
 
           {/* Grouped Sections */}
-          <div className="space-y-2xl">
+          <div className="space-y-8 md:space-y-12">
             {/* 1. Análisis de Laboratorio */}
             {activeSections.includes('lab') && (
               <ExpandableSection title="Análisis de Laboratorio">
@@ -561,48 +656,58 @@ const OperationOverview = ({ isOperator = false }) => {
       {showEditModal && (
         <div className="fixed inset-0 z-[70] flex items-center justify-center p-4">
           <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={() => setShowEditModal(false)}></div>
-          <div className="relative bg-white w-full max-w-md rounded-3xl shadow-2xl border border-outline/10 overflow-hidden">
+          <div className="relative bg-white w-full max-w-md rounded-[28px] shadow-2xl border border-outline/10 overflow-hidden flex flex-col">
             {/* Modal Header */}
-            <div className="bg-primary px-8 py-6 flex items-center gap-4">
-              <div className="w-12 h-12 bg-white/20 rounded-2xl flex items-center justify-center">
-                <span className="material-symbols-outlined text-white text-2xl">edit_note</span>
+            <div className="bg-[#001016] px-8 py-6 flex items-center justify-between">
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 bg-white/10 rounded-full flex items-center justify-center text-white flex-shrink-0">
+                  <span className="material-symbols-outlined text-2xl">edit_note</span>
+                </div>
+                <div>
+                  <h3 className="font-headline-lg-mobile text-white font-bold">Editar Información</h3>
+                  <p className="text-white/60 font-label-md text-xs mt-0.5">Semana {activeWeek} — {decodedOperation}</p>
+                </div>
               </div>
-              <div>
-                <h3 className="font-headline-lg-mobile text-white">Editar Información</h3>
-                <p className="text-white/70 font-label-md text-label-md">Semana {activeWeek} — {decodedOperation}</p>
-              </div>
+              <button className="p-2 hover:bg-white/10 rounded-full text-white/70 hover:text-white transition-colors" onClick={() => setShowEditModal(false)}>
+                <span className="material-symbols-outlined">close</span>
+              </button>
             </div>
+
             {/* Modal Body */}
             <div className="p-8">
-              <div className="bg-surface-container rounded-2xl p-6 mb-6 flex items-start gap-4 border border-outline/10">
-                <span className="material-symbols-outlined text-secondary text-2xl mt-0.5">construction</span>
+              {/* Light Blue Banner Box */}
+              <div className="bg-[#ebf4ff] border border-blue-100 rounded-2xl p-6 mb-6 flex items-start gap-4">
+                <span className="material-symbols-outlined text-blue-600 text-2xl mt-0.5 flex-shrink-0">engineering</span>
                 <div>
-                  <p className="font-title-md text-on-surface mb-1">Módulo en Desarrollo</p>
-                  <p className="text-on-surface-variant font-body-md text-body-md leading-relaxed">
+                  <p className="font-title-md text-[#002733] font-bold mb-1">Módulo en Desarrollo</p>
+                  <p className="text-[#002733]/70 font-body-md text-sm leading-relaxed">
                     El módulo de captura y edición de información de parámetros está en desarrollo activo para la siguiente versión del sistema.
                   </p>
                 </div>
               </div>
-              <div className="flex flex-col gap-3">
-                <div className="flex items-center gap-3 text-on-surface-variant font-body-md text-body-md">
-                  <span className="material-symbols-outlined text-secondary text-[18px]">check_circle</span>
+
+              {/* Checklist */}
+              <div className="flex flex-col gap-4 mb-2 select-none">
+                <div className="flex items-center gap-3 text-on-surface-variant font-semibold text-sm">
+                  <span className="material-symbols-outlined text-[#0e6f85] text-[20px] flex-shrink-0">check_circle</span>
                   Captura diaria de parámetros de laboratorio
                 </div>
-                <div className="flex items-center gap-3 text-on-surface-variant font-body-md text-body-md">
-                  <span className="material-symbols-outlined text-secondary text-[18px]">check_circle</span>
+                <div className="flex items-center gap-3 text-on-surface-variant font-semibold text-sm">
+                  <span className="material-symbols-outlined text-[#0e6f85] text-[20px] flex-shrink-0">check_circle</span>
                   Histórico retroactivo de 30 días
                 </div>
-                <div className="flex items-center gap-3 text-on-surface-variant font-body-md text-body-md">
-                  <span className="material-symbols-outlined text-secondary text-[18px]">check_circle</span>
+                <div className="flex items-center gap-3 text-on-surface-variant font-semibold text-sm">
+                  <span className="material-symbols-outlined text-[#0e6f85] text-[20px] flex-shrink-0">check_circle</span>
                   Edición de bitácora y adiciones
                 </div>
               </div>
             </div>
+
             {/* Modal Footer */}
             <div className="px-8 pb-8">
               <button 
                 onClick={() => setShowEditModal(false)} 
-                className="w-full py-4 bg-primary text-on-primary rounded-2xl font-title-lg hover:opacity-90 transition-opacity active:scale-95"
+                className="w-full py-4 bg-[#001016] text-white rounded-2xl font-bold hover:opacity-95 transition-all active:scale-[0.98] shadow-md"
               >
                 Entendido
               </button>

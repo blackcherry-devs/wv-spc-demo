@@ -1,62 +1,245 @@
-import React from 'react';
+import { useEffect, useRef } from 'react';
+import gsap from 'gsap';
 
 const OPERATIONS = [
-  { name: 'barrenado fino', icon: 'tune', status: 'ESTADO: OK', statusColor: 'bg-secondary-container text-on-secondary-container', desc: 'Precisión micrométrica en orificios críticos de bloque motor.' },
-  { name: 'lavadora central', icon: 'local_laundry_service', status: 'ACTIVO', statusColor: 'bg-secondary-container text-on-secondary-container', desc: 'Sistema de limpieza por ultrasonido y alta presión.' },
-  { name: 'gehring - hycut central', icon: 'architecture', status: 'MANTENIMIENTO', statusColor: 'bg-surface-variant text-on-surface-variant', desc: 'Rectificado de precisión con sistema de refrigeración Hycut.' },
-  { name: 'gehring - additive central', icon: 'science', status: 'OK', statusColor: 'bg-secondary-container text-on-secondary-container', desc: 'Dosificación de aditivos para acabado superficial.' },
-  { name: 'honeado - hycut central', icon: 'texture', status: 'OK', statusColor: 'bg-secondary-container text-on-secondary-container', desc: 'Pulido de cilindros para optimización de lubricación.' },
-  { name: 'honeado - additive central', icon: 'water_drop', status: 'ALERTA NIVEL', statusColor: 'text-error font-bold', desc: 'Control de fluidos abrasivos con aditivos químicos.' },
-  { name: 'AF 355. 1 Pre', icon: 'inbox', status: 'OK', statusColor: 'bg-secondary-container text-on-secondary-container', desc: 'Medición dimensional previa a ensamble crítico.' },
-  { name: 'AF 355. 1 Post', icon: 'fact_check', status: 'OK', statusColor: 'bg-secondary-container text-on-secondary-container', desc: 'Validación final de geometría tras mecanizado AF355.' },
-  { name: 'AF 355. 2 Pre', icon: 'microscope', status: 'ACTIVO', statusColor: 'bg-secondary-container text-on-secondary-container', desc: 'Inspección de fase 2 para componentes de alta tolerancia.' },
-  { name: 'AF 355. 2 Post', icon: 'fact_check', status: 'COMPLETO', statusColor: 'bg-secondary-container text-on-secondary-container', desc: 'Certificación de calidad post-operación fase 2.' },
-  { name: 'AF 323', icon: 'precision_manufacturing', status: 'ESTADO: OK', statusColor: 'bg-secondary-container text-on-secondary-container', desc: 'Unidad multifuncional de acabado para serie 323.' },
+  { name: 'barrenado fino', icon: 'tune', status: 'ESTADO: OK', desc: 'Precisión micrométrica en orificios críticos de bloque motor.', metricsOk: 12, metricsNok: 1 },
+  { name: 'lavadora central', icon: 'local_laundry_service', status: 'ACTIVO', desc: 'Sistema de limpieza por ultrasonido y alta presión.', metricsOk: 8, metricsNok: 0 },
+  { name: 'gehring - hycut central', icon: 'architecture', status: 'MANTENIMIENTO', desc: 'Rectificado de precisión con sistema de refrigeración Hycut.', metricsOk: 10, metricsNok: 2 },
+  { name: 'gehring - additive central', icon: 'science', status: 'OK', desc: 'Dosificación de aditivos para acabado superficial.', metricsOk: 9, metricsNok: 0 },
+  { name: 'honeado - hycut central', icon: 'texture', status: 'OK', desc: 'Pulido de cilindros para optimización de lubricación.', metricsOk: 11, metricsNok: 0 },
+  { name: 'honeado - additive central', icon: 'water_drop', status: 'ALERTA NIVEL', desc: 'Control de fluidos abrasivos con aditivos químicos.', metricsOk: 7, metricsNok: 3 },
+  { name: 'AF 355. 1 Pre', icon: 'inbox', status: 'OK', desc: 'Medición dimensional previa a ensamble crítico.', metricsOk: 14, metricsNok: 0 },
+  { name: 'AF 355. 1 Post', icon: 'fact_check', status: 'OK', desc: 'Validación final de geometría tras mecanizado AF355.', metricsOk: 15, metricsNok: 0 },
+  { name: 'AF 355. 2 Pre', icon: 'microscope', status: 'ACTIVO', desc: 'Inspección de fase 2 para componentes de alta tolerancia.', metricsOk: 12, metricsNok: 1 },
+  { name: 'AF 355. 2 Post', icon: 'fact_check', status: 'COMPLETO', desc: 'Certificación de calidad post-operación fase 2.', metricsOk: 13, metricsNok: 0 },
+  { name: 'AF 323', icon: 'precision_manufacturing', status: 'ESTADO: OK', desc: 'Unidad multifuncional de acabado para serie 323.', metricsOk: 10, metricsNok: 0 },
 ];
 
 const OperationsGrid = ({ processName, onSelectOperation }) => {
-  return (
-    <div>
-      <header className="mb-xl">
-        <div className="flex items-center gap-sm text-secondary font-label-md text-label-md uppercase tracking-widest mb-xs">
-          <span className="material-symbols-outlined text-[16px]">precision_manufacturing</span>
-          {processName}
-        </div>
-        <h1 className="font-headline-lg text-headline-lg text-on-surface">Selección de Operaciones</h1>
-        <p className="text-on-surface-variant font-body-lg text-body-lg mt-xs">Seleccione una unidad de operación para visualizar los parámetros de calidad en tiempo real.</p>
-      </header>
+  const containerRef = useRef(null);
 
-      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 auto-rows-fr">
-        {OPERATIONS.map((op, index) => (
-          <div 
-            key={index} 
-            onClick={() => onSelectOperation(op.name)}
-            className="bg-white p-6 border border-surface-variant rounded-xl flex flex-col justify-between group cursor-pointer hover:shadow-lg hover:-translate-y-1 transition-all duration-300"
-          >
-            <div>
-              <div className="flex justify-between items-start mb-6">
-                <div className="w-10 h-10 bg-secondary-container/40 text-secondary flex items-center justify-center rounded-lg">
-                  <span className="material-symbols-outlined">{op.icon}</span>
-                </div>
-                <span className={`text-[10px] font-bold px-2 py-1 rounded uppercase tracking-widest ${op.statusColor}`}>
-                  {op.status}
-                </span>
-              </div>
-              <h3 className="font-title-md text-title-md font-bold text-on-surface group-hover:text-secondary transition-colors mb-2">
-                {op.name}
-              </h3>
-              <p className="font-body-md text-sm text-on-surface-variant leading-relaxed">
-                {op.desc}
-              </p>
-            </div>
-            <div className="mt-8 flex items-center justify-between text-on-surface-variant group-hover:text-secondary transition-colors">
-              <span className="font-label-md font-bold text-xs">Ver Métricas</span>
-              <span className="material-symbols-outlined text-sm">chevron_right</span>
-            </div>
+  useEffect(() => {
+    if (!containerRef.current) return;
+    const cards = containerRef.current.querySelectorAll('.vw-operation-card');
+    gsap.fromTo(cards, 
+      { opacity: 0, x: -80 },
+      { 
+        opacity: 1, 
+        x: 0, 
+        duration: 0.8, 
+        stagger: 0.08, 
+        ease: 'back.out(1.2)',
+        clearProps: 'transform,opacity'
+      }
+    );
+  }, []);
+
+  return (
+    <>
+      <style>{`
+        .vw-operation-card {
+          background: #002733;
+          padding: 6px 6px 20px 6px;
+          overflow: hidden;
+          box-shadow: rgba(0, 39, 51, 0.12) 0px 8px 24px 0px;
+          transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.4s ease;
+        }
+
+        .vw-operation-card:hover {
+          transform: scale(1.03) translateY(-4px);
+          box-shadow: rgba(0, 39, 51, 0.22) 0px 16px 36px 0px;
+        }
+
+        .vw-operation-card .inner-gradient-section {
+          border-radius: 20px;
+          display: flex;
+          flex-direction: column;
+          background: #ffffff;
+          position: relative;
+          padding: 56px 20px 20px 20px;
+        }
+
+        /* Soft Neumorphic Inset Slots */
+        .vw-operation-card .vw-inset-slot {
+          background: #f4f6f9;
+          border: 1px solid rgba(0, 39, 51, 0.03);
+          box-shadow: inset 3px 3px 6px rgba(0, 39, 51, 0.06), inset -3px -3px 6px rgba(255, 255, 255, 0.9);
+        }
+
+        /* Neumorphic Raised Push Buttons */
+        .vw-operation-card .vw-push-button {
+          background: #ffffff;
+          border: 1px solid rgba(0, 39, 51, 0.05);
+          box-shadow: 4px 4px 10px rgba(0, 39, 51, 0.06), -4px -4px 10px rgba(255, 255, 255, 0.9);
+          transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+        }
+
+        .vw-operation-card .vw-push-button:hover {
+          background: #002733;
+          color: #ffffff !important;
+          box-shadow: 0px 4px 12px rgba(0, 39, 51, 0.15);
+          border-color: transparent;
+        }
+
+        .vw-operation-card .vw-push-button:active {
+          transform: scale(0.98);
+        }
+
+        /* Diagonal cutout tab top-left */
+        .vw-operation-card .inner-gradient-section .top-cutout-border {
+          border-bottom-right-radius: 12px;
+          height: 38px;
+          width: 175px;
+          background: #002733;
+          position: absolute;
+          top: -1px;
+          left: -1px;
+          transform: skew(-40deg);
+          transform-origin: top left;
+          box-shadow: -10px -10px 0 0 #002733;
+        }
+
+        /* Smooth inside rounded corner right side of cutout */
+        .vw-operation-card .inner-gradient-section .top-cutout-border::before {
+          content: "";
+          position: absolute;
+          width: 16px;
+          height: 16px;
+          top: 0;
+          right: -16px;
+          background: transparent;
+          border-top-left-radius: 12px;
+          box-shadow: -6px -6px 0 2px #002733;
+        }
+
+        /* Smooth inside rounded corner below cutout */
+        .vw-operation-card .inner-gradient-section::before {
+          content: "";
+          position: absolute;
+          top: 37px;
+          left: 0;
+          background: transparent;
+          height: 16px;
+          width: 16px;
+          border-top-left-radius: 12px;
+          box-shadow: -6px -6px 0 2px #002733;
+        }
+
+        .vw-operation-card .header-content {
+          position: absolute;
+          top: 0;
+          left: 0;
+          width: 100%;
+          height: 38px;
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          padding: 0 16px 0 20px;
+          z-index: 10;
+        }
+
+        .vw-operation-card .header-content .operation-title-container {
+          width: 120px;
+          overflow: hidden;
+          white-space: nowrap;
+          position: relative;
+        }
+
+        .vw-operation-card .header-content .operation-title {
+          display: inline-block;
+          color: white;
+          font-weight: 800;
+          font-size: 13px;
+          letter-spacing: 0.5px;
+          animation: operation-marquee 8s linear infinite alternate;
+        }
+
+        @keyframes operation-marquee {
+          0%, 20% {
+            transform: translateX(0);
+          }
+          80%, 100% {
+            transform: translateX(min(0px, calc(120px - 100%)));
+          }
+        }
+
+        .vw-operation-card .header-content .operation-icon {
+          color: #002733;
+          font-size: 20px;
+          margin-top: 2px;
+        }
+      `}</style>
+
+      <div>
+        <header className="mb-8">
+          <div className="flex items-center gap-2 text-secondary font-label-md text-label-md uppercase tracking-widest mb-2">
+            <span className="material-symbols-outlined text-[16px]">precision_manufacturing</span>
+            {processName}
           </div>
-        ))}
+          <h1 className="font-headline-lg text-headline-lg text-on-surface">Selección de Operaciones</h1>
+          <p className="text-on-surface-variant font-body-lg text-body-lg mt-2">Seleccione una unidad de operación para visualizar los parámetros de calidad en tiempo real.</p>
+        </header>
+
+        <div ref={containerRef} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 auto-rows-fr">
+          {OPERATIONS.map((op, index) => (
+            <div
+              key={index}
+              onClick={() => onSelectOperation(op.name)}
+              className="vw-operation-card rounded-[28px] cursor-pointer"
+            >
+              <div className="inner-gradient-section h-full flex flex-col justify-between">
+                <div>
+                  {/* Skewed background cutout border */}
+                  <div className="top-cutout-border"></div>
+
+                  {/* Absolute header content (non-skewed) */}
+                  <div className="header-content flex justify-between items-center w-full">
+                    <div className="operation-title-container">
+                      <span className="operation-title uppercase">{op.name}</span>
+                    </div>
+                    <span className="material-symbols-outlined operation-icon">{op.icon}</span>
+                  </div>
+
+                  {/* Status Header */}
+                  <div className="flex items-center justify-between gap-2.5 mb-4 mt-1">
+                    <div className="flex items-center gap-2">
+                      <span className="material-symbols-outlined text-[#002733] text-[20px]">analytics</span>
+                      <span className="text-[#002733] font-bold text-sm tracking-wide">Métricas del Proceso</span>
+                    </div>
+                  </div>
+
+                  {/* Metrics OK / NOK Counters Grid */}
+                  <div className="flex items-center gap-4 mb-4">
+                    <div className="flex-1 vw-inset-slot rounded-[24px] p-4 flex flex-col items-center">
+                      <span className="text-3xl font-black text-green-600 leading-none">{op.metricsOk}</span>
+                      <span className="text-[9px] font-black text-green-700 uppercase tracking-widest mt-2">Métricas OK</span>
+                    </div>
+                    <div className="w-[1px] h-10 bg-[#002733]/10"></div>
+                    <div className="flex-1 vw-inset-slot rounded-[24px] p-4 flex flex-col items-center">
+                      <span className="text-3xl font-black text-red-600 leading-none">{op.metricsNok}</span>
+                      <span className="text-[9px] font-black text-red-700 uppercase tracking-widest mt-2">Métricas NOK</span>
+                    </div>
+                  </div>
+
+                  {/* Description Box */}
+                  <p className="text-xs font-semibold text-[#002733]/70 leading-relaxed mb-6">
+                    {op.desc}
+                  </p>
+                </div>
+
+                {/* Ver Métricas Button (now inside light blue area) */}
+                <button 
+                  className="w-full py-4 rounded-2xl vw-push-button text-[#002733] text-sm font-bold tracking-wide flex items-center justify-center gap-2 active:scale-[0.98] group/btn"
+                >
+                  <span>Ver Métricas</span>
+                  <span className="material-symbols-outlined text-[18px] transition-transform group-hover/btn:translate-x-1">arrow_forward</span>
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
-    </div>
+    </>
   );
 };
 
