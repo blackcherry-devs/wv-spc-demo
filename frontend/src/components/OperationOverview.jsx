@@ -4,6 +4,8 @@ import gsap from 'gsap';
 import OverviewChart from './OverviewChart';
 import WaterTank from './WaterTank';
 
+import { fetchMockOperationData } from '../mockData';
+
 // Dynamic Data fetched from API
 
 const ExpandableSection = ({ title, children, visibleCount = 2 }) => {
@@ -367,12 +369,8 @@ const OperationOverview = ({ isOperator = false }) => {
   const [error, setError] = useState(null);
 
   React.useEffect(() => {
-    // In a real scenario, the URL would not be hardcoded to 3001, but handled via proxy or env var.
-    fetch(`http://localhost:3001/api/operations/${encodeURIComponent(decodedProcess)}/${encodeURIComponent(decodedOperation)}`)
-      .then(res => {
-        if (!res.ok) throw new Error('Error en la respuesta del servidor');
-        return res.json();
-      })
+    setLoading(true);
+    fetchMockOperationData(decodedOperation)
       .then(data => {
         const storageKey = `spc_records_${decodedProcess}_${decodedOperation}`;
         const sessionRecords = JSON.parse(sessionStorage.getItem(storageKey) || '[]');
@@ -429,7 +427,7 @@ const OperationOverview = ({ isOperator = false }) => {
         setLoading(false);
       })
       .catch(err => {
-        console.error("Failed to fetch operation data", err);
+        console.error("Failed to load mock operation data", err);
         setError(err.message);
         setLoading(false);
       });
