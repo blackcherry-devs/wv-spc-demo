@@ -1,6 +1,7 @@
-import React, { useState, useContext } from 'react';
+import { useState, useEffect, useRef, useContext } from 'react';
 import { AuthContext } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
+import gsap from 'gsap';
 
 const Login = () => {
   const [username, setUsername] = useState('');
@@ -8,8 +9,102 @@ const Login = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   
+  // Single play check for the initial loader
+  const [showLoader, setShowLoader] = useState(false);
+  const loaderRef = useRef(null);
+  const svgRef = useRef(null);
+  const textRef = useRef(null);
+  const curtainPathRef = useRef(null);
+
   const { login } = useContext(AuthContext);
   const navigate = useNavigate();
+
+  useEffect(() => {
+    const hasPlayed = sessionStorage.getItem('vw-loader-played');
+    if (!hasPlayed) {
+      setShowLoader(true);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!showLoader || !svgRef.current || !loaderRef.current || !curtainPathRef.current) return;
+
+    const path = svgRef.current.querySelector('.vw-official-path');
+    if (!path) return;
+    
+    // Set up path for stroke contour outline drawing dynamically
+    const length = path.getTotalLength();
+    path.style.strokeDasharray = length;
+    path.style.strokeDashoffset = length;
+
+    const tl = gsap.timeline({
+      onComplete: () => {
+        // Animation finished, morph the curtain upwards with custom elastic curve bounce
+        const exitTl = gsap.timeline({
+          onComplete: () => {
+            setShowLoader(false);
+            sessionStorage.setItem('vw-loader-played', 'true');
+          }
+        });
+
+        // 1. Fade out content in the center
+        exitTl.to(textRef.current, {
+          opacity: 0,
+          y: -15,
+          duration: 0.4,
+          ease: 'power2.in'
+        })
+        .to(svgRef.current, {
+          scale: 0.8,
+          opacity: 0,
+          duration: 0.4,
+          ease: 'power2.in'
+        }, '-=0.3')
+        
+        // 2. Animate curved curtain pulling up (morphing bottom path edge)
+        .to(curtainPathRef.current, {
+          attr: { d: "M 0 0 L 100 0 L 100 0 Q 50 -20 0 0 Z" },
+          duration: 1.5,
+          ease: "power4.inOut"
+        }, "-=0.1")
+        // Settle the spring back to perfectly flat top
+        .to(curtainPathRef.current, {
+          attr: { d: "M 0 0 L 100 0 L 100 0 Q 50 0 0 0 Z" },
+          duration: 0.6,
+          ease: "bounce.out"
+        });
+      }
+    });
+
+    // Step 1: Draw the outline contour of the official path
+    tl.to(path, {
+      strokeDashoffset: 0,
+      duration: 2.8,
+      ease: 'power2.inOut'
+    })
+    // Step 2: Smoothly transition from transparent stroke contour to a solid filled white logo
+    .to(path, {
+      fill: '#ffffff',
+      duration: 0.8,
+      ease: 'power2.in'
+    }, '-=0.8')
+    // Step 3: Glow pulse
+    .fromTo(svgRef.current, {
+      scale: 0.95,
+      filter: 'drop-shadow(0 0 0px rgba(80, 246, 255, 0))'
+    }, {
+      scale: 1.04,
+      filter: 'drop-shadow(0 0 24px rgba(80, 246, 255, 0.8))',
+      duration: 1.2,
+      ease: 'power2.out'
+    }, '-=0.6')
+    .to(svgRef.current, {
+      scale: 1,
+      duration: 0.3,
+      ease: 'power1.inOut'
+    });
+
+  }, [showLoader]);
 
   const handleLogin = (e) => {
     e.preventDefault();
@@ -24,7 +119,59 @@ const Login = () => {
   };
 
   return (
-    <div className="bg-surface h-screen flex flex-col overflow-hidden w-full font-sans">
+    <div className="bg-surface h-screen flex flex-col overflow-hidden w-full font-sans relative">
+
+      {/* Initial Loader Panel with Curved Curtain */}
+      {showLoader && (
+        <div 
+          ref={loaderRef} 
+          className="fixed inset-0 z-50 flex flex-col items-center justify-center select-none"
+        >
+          {/* Full Screen SVG Curtain */}
+          <svg 
+            viewBox="0 0 100 100" 
+            preserveAspectRatio="none" 
+            className="absolute inset-0 w-full h-full pointer-events-auto fill-[#002733] stroke-none z-0"
+          >
+            <path 
+              ref={curtainPathRef} 
+              d="M 0 0 L 100 0 L 100 100 Q 50 100 0 100 Z" 
+            />
+          </svg>
+
+          {/* Centered drawing content */}
+          <div className="relative z-10 flex flex-col items-center gap-12">
+            <div className="relative">
+              <svg 
+                viewBox="0 0 1624.9 1262.2" 
+                className="w-48 h-48 md:w-56 md:h-56 select-none" 
+                ref={svgRef}
+              >
+                <g transform="matrix(10.188387870788574, 0, 0, 10.188387870788574, -251.519936680809, -252.79260253906244)">
+                  <path 
+                    className="vw-official-path" 
+                    d="M104.5,132.1c-24.9,0-45.3-20.5-45.3-45.4c0-5.6,1-10.9,2.9-15.9l26.5,53.3c0.3,0.7,0.8,1.3,1.6,1.3 c0.8,0,1.3-0.6,1.6-1.3L104,96.8c0.1-0.3,0.3-0.6,0.6-0.6s0.4,0.3,0.6,0.6l12.2,27.3c0.3,0.7,0.8,1.3,1.6,1.3 c0.8,0,1.3-0.6,1.6-1.3l26.5-53.3c1.9,5,2.9,10.3,2.9,15.9C149.8,111.6,129.4,132.1,104.5,132.1z M104.5,76.4 c-0.3,0-0.4-0.3-0.6-0.6l-14.2-32c4.6-1.7,9.6-2.6,14.8-2.6s10.2,0.9,14.8,2.6l-14.2,32C104.9,76.2,104.8,76.4,104.5,76.4z M90,109.3c-0.3,0-0.4-0.3-0.6-0.6l-23-46.4C70.5,56,76,50.7,82.7,47l16.6,36.9c0.2,0.6,0.7,0.8,1.2,0.8h8c0.6,0,1-0.1,1.3-0.8 L126.4,47c6.6,3.7,12.2,9,16.3,15.3l-23.2,46.4c-0.1,0.3-0.3,0.6-0.6,0.6c-0.3,0-0.4-0.3-0.6-0.6l-8.7-19.8 c-0.3-0.7-0.7-0.8-1.3-0.8h-8c-0.6,0-1,0.1-1.3,0.8l-8.4,19.8C90.5,109,90.3,109.3,90,109.3z M104.5,136.7c27.7,0,50-22.3,50-50 s-22.3-50-50-50s-50,22.3-50,50S76.8,136.7,104.5,136.7z" 
+                    fill="none" 
+                    stroke="#ffffff" 
+                    strokeWidth="0.8" 
+                    strokeLinecap="round" 
+                    strokeLinejoin="round" 
+                  />
+                </g>
+              </svg>
+            </div>
+            
+            <div ref={textRef} className="text-center">
+              <h2 className="text-[#50F6FF] font-title-md text-xs md:text-sm tracking-[0.25em] font-extrabold uppercase animate-pulse">
+                SISTEMA DE CONTROL ESTADÍSTICO
+              </h2>
+              <p className="text-white/40 text-[9px] md:text-[10px] uppercase font-bold tracking-[0.4em] mt-2">
+                Volkswagen de México
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
 
 
       {/* Header */}
