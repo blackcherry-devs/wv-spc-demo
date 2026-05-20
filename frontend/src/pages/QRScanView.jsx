@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import WaterTank from '../components/WaterTank';
 import ChartDetail from '../components/ChartDetail';
@@ -11,14 +11,19 @@ const QRScanView = () => {
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    // Fetch mock data from the Node.js backend
+    // Simulated mock fetch to prevent serverless deployment connection errors
     const fetchData = async () => {
       try {
-        const response = await fetch(`http://localhost:5001/api/operacion/${id}`);
-        if (!response.ok) {
-          throw new Error('Machine not found');
-        }
-        const result = await response.json();
+        // Simulating 400ms server response latency
+        await new Promise(res => setTimeout(res, 400));
+        
+        const result = {
+          id: id || 'OP-120',
+          name: 'Lavadora Central - Cavidades K01',
+          waterLevel: 85,
+          processId: 'Cilindros',
+          operationId: 'Lavadora Central'
+        };
         setData(result);
       } catch (err) {
         setError(err.message);

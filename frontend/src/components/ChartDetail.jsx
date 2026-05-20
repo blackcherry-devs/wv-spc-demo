@@ -1,5 +1,6 @@
 import React from 'react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine } from 'recharts';
+import { fetchMockOperationData } from '../mockData';
 
 const defaultRawData = [
   { day: '01-may-26', conc: 5.30, conc2: 5.34, ph: 9.43 },
@@ -267,8 +268,7 @@ const ChartDetail = ({
 
   React.useEffect(() => {
     if (operationId && processId) {
-      fetch(`http://localhost:3001/api/operations/${encodeURIComponent(processId)}/${encodeURIComponent(operationId)}`)
-        .then(res => res.json())
+      fetchMockOperationData(operationId)
         .then(data => {
           if (data && data.laboratorio) {
             const combined = data.laboratorio.find(m => m.metricId === 'conc-ph');
